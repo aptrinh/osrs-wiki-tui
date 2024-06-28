@@ -56,6 +56,6 @@ if __name__ == "__main__":
     print(f"Searching for: {search_term}")
     page_url, first_paragraph, infobox_info = get_wiki_info(search_term)
     
-    print(f"\nPage URL: {page_url}")
-    print(f"\nSummary: {first_paragraph}")
-    print(f"\nInfobox Information:\n{infobox_info}")
+    print(f"\n# Page URL: {page_url}")
+    print(f"\n## Summary: {first_paragraph}")
+    print(f"\n### Infobox Information:\n{infobox_info}")
