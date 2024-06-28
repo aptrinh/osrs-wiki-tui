@@ -23,12 +23,27 @@ def get_wiki_info(search_term):
     
     info = []
     for row in infobox.find_all('tr'):
-        th = row.find('th', colspan="8")
-        td = row.find('td', colspan="16")
+        th = row.find('th')
+        td = row.find('td')
         if th and td:
             key = th.text.strip()
             value = td.text.strip()
-            info.append(f"{key}: {value}")
+            
+            # Special handling for "Assigned by" or similar image-based fields
+            if not value:
+                links = td.find_all('a')
+                value = ", ".join(link.get('title', link.text) for link in links if link.get('title') or link.text)
+            
+            # Handle cases where value might be in a nested structure
+            if not value:
+                value = " ".join(td.stripped_strings)
+            
+            if value:
+                info.append(f"{key}: {value}")
+        
+        # Handle subheaders
+        elif th and 'infobox-subheader' in th.get('class', []):
+            info.append(f"\n--- {th.text.strip()} ---")
     
     return page_url, first_paragraph, "\n".join(info) if info else "No relevant information found in infobox."
 
