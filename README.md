@@ -10,6 +10,7 @@ This Python script allows you to quickly fetch and display information from the 
 - Displays page URL, summary, and formatted infobox information
 - Presents data in a visually appealing table format in the terminal
 - Handles various types of infoboxes (monsters, items, etc.)
+- Asks for user input on disambiguation pages
 
 ## Requirements
 
@@ -21,8 +22,9 @@ This Python script allows you to quickly fetch and display information from the 
 
 1. Clone this repository:
 ```
-git clone https://github.com/aptrinh/osrs-wiki-tui.git
-cd osrs-wiki-tui
+git clone https://github.com/aptrinh/osrs-wiki-tui.git \
+&& cd osrs-wiki-tui
+
 ```
 2. Install the required packages:
 ```
@@ -34,7 +36,7 @@ Run the script from the command line, providing your search term as an argument:
 ```
 python osrs_wiki.py <search term>
 ```
-> Example
+### Example
 ```
 python osrs_wiki.py rat
 ```
@@ -49,7 +51,7 @@ source ~/.zshrc
 
 2. Set osrs.py to be executabe with
 ```
-chmod + x <~/path/to/osrs_wiki.py>
+chmod + x ~/path/to/osrs_wiki.py
 ```
 
 Now you can just run `osrs <thing>`, i.e: `osrs highwayman`
