@@ -66,12 +66,15 @@ def format_infobox(infobox_info):
     table.add_column("Value", style="yellow")
 
     current_section = "General"
+    last_displayed_section = None
     for line in infobox_info.split('\n'):
         if line.startswith('---'):
             current_section = line.strip('- ')
         elif ': ' in line:
             key, value = line.split(': ', 1)
-            table.add_row(current_section, key, value)
+            section_to_display = current_section if current_section != last_displayed_section else ""
+            table.add_row(section_to_display, key, value)
+            last_displayed_section = current_section
 
     return table
 
