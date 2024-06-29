@@ -16,7 +16,7 @@ def get_wiki_info(url):
     
     first_p = soup.find('p')
     first_paragraph = first_p.text.strip() if first_p else "No content found."
-    
+
     # Check for disambiguation page
     if "may refer to:" in first_paragraph:
         options = []
@@ -27,11 +27,11 @@ def get_wiki_info(url):
                 if link:
                     options.append((i, link.text, link['href'], li.text))
         return page_url, first_paragraph, options, True  # True indicates it's a disambiguation page
-    
+
     # If not a disambiguation page, process as before
     infobox = soup.find('table', class_=lambda x: x and 'infobox' in x)
     if not infobox:
-        return page_url, first_paragraph, "No infobox found.", False
+        return page_url, first_paragraph, None, False  # Return None instead of a string message
     
     info = []
     current_subheader = "General"  # Start with a "General" section
@@ -65,7 +65,7 @@ def get_wiki_info(url):
                 if key and value:
                     info.append(f"{key}: {value}")
     
-    return page_url, first_paragraph, "\n".join(info) if info else "No relevant information found in infobox.", False
+    return page_url, first_paragraph, "\n".join(info) if info else None, False
 
 def format_infobox(infobox_info):
     table = Table(title="# Infobox Information #", show_header=True, header_style="bold magenta")
@@ -132,4 +132,8 @@ if __name__ == "__main__":
     
     console.print(Panel(f"[link={page_url}]{page_url}[/link]", title="Page URL", expand=False))
     console.print(Panel(first_paragraph, title="Summary", expand=False))
-    console.print(format_infobox(infobox_info))
+    
+    if infobox_info:
+        console.print(format_infobox(infobox_info))
+    # else:
+    #     console.print("[yellow]No infobox information found for this page.[/yellow]")
