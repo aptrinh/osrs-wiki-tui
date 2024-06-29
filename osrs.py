@@ -60,7 +60,7 @@ def get_wiki_info(search_term):
     return page_url, first_paragraph, "\n".join(info) if info else "No relevant information found in infobox."
 
 def format_infobox(infobox_info):
-    table = Table(title="Infobox Information", show_header=True, header_style="bold magenta")
+    table = Table(title="# Infobox Information #", show_header=True, header_style="bold magenta")
     table.add_column("Section", style="cyan", no_wrap=True)
     table.add_column("Key", style="green")
     table.add_column("Value", style="yellow")
