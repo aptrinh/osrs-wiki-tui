@@ -3,6 +3,10 @@ import sys
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import quote
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+
 
 def get_wiki_info(search_term):
     url = f"https://oldschool.runescape.wiki/w/{quote(search_term)}"
@@ -55,16 +59,32 @@ def get_wiki_info(search_term):
     
     return page_url, first_paragraph, "\n".join(info) if info else "No relevant information found in infobox."
 
+def format_infobox(infobox_info):
+    table = Table(title="Infobox Information", show_header=True, header_style="bold magenta")
+    table.add_column("Section", style="cyan", no_wrap=True)
+    table.add_column("Key", style="green")
+    table.add_column("Value", style="yellow")
+
+    current_section = "General"
+    for line in infobox_info.split('\n'):
+        if line.startswith('---'):
+            current_section = line.strip('- ')
+        elif ': ' in line:
+            key, value = line.split(': ', 1)
+            table.add_row(current_section, key, value)
+
+    return table
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: ./osrs_wiki.py <search_term>")
         sys.exit(1)
     
     search_term = " ".join(sys.argv[1:])
-    print(f"Searching for: {search_term}")
     page_url, first_paragraph, infobox_info = get_wiki_info(search_term)
-    
-    print(f"\n# Page URL: {page_url}")
-    print(f"\n## Summary: {first_paragraph}")
-    print(f"\n### Infobox Information:")
-    print(infobox_info)
+
+    console = Console()
+    console.print(f"[bold blue]Searching for:[/bold blue] {search_term}")
+    console.print(Panel(f"[link={page_url}]{page_url}[/link]", title="Page URL", expand=False))
+    console.print(Panel(first_paragraph, title="Summary", expand=False))
+    console.print(format_infobox(infobox_info))
