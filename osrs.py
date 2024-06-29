@@ -22,28 +22,36 @@ def get_wiki_info(search_term):
         return page_url, first_paragraph, "No infobox found."
     
     info = []
+    current_subheader = "General"  # Start with a "General" section
+
     for row in infobox.find_all('tr'):
         th = row.find('th')
-        td = row.find('td')
-        if th and td:
+        tds = row.find_all('td')
+
+        if th and 'infobox-subheader' in th.get('class', []):
+            current_subheader = th.text.strip()
+            info.append(f"\n--- {current_subheader} ---")
+        elif th:
             key = th.text.strip()
-            value = td.text.strip()
+            value = " ".join(td.text.strip() for td in tds if td.text.strip())
             
             # Special handling for "Assigned by" or similar image-based fields
             if not value:
-                links = td.find_all('a')
+                links = row.find_all('a')
                 value = ", ".join(link.get('title', link.text) for link in links if link.get('title') or link.text)
             
             # Handle cases where value might be in a nested structure
             if not value:
-                value = " ".join(td.stripped_strings)
+                value = " ".join(row.stripped_strings)
             
             if value:
                 info.append(f"{key}: {value}")
-        
-        # Handle subheaders
-        elif th and 'infobox-subheader' in th.get('class', []):
-            info.append(f"\n--- {th.text.strip()} ---")
+        elif all('infobox-nested' in td.get('class', []) for td in tds):
+            for td in tds:
+                key = td.get('data-attr-param', '').capitalize()
+                value = td.text.strip()
+                if key and value:
+                    info.append(f"{key}: {value}")
     
     return page_url, first_paragraph, "\n".join(info) if info else "No relevant information found in infobox."
 
@@ -58,4 +66,5 @@ if __name__ == "__main__":
     
     print(f"\n# Page URL: {page_url}")
     print(f"\n## Summary: {first_paragraph}")
-    print(f"\n### Infobox Information:\n{infobox_info}")
+    print(f"\n### Infobox Information:")
+    print(infobox_info)
