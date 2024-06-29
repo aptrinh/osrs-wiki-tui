@@ -38,14 +38,21 @@ python osrs.py <search term>
 ```
 python osrs.py rat
 ```
-## Calling from terminal/CLI
+## Calling from terminal/CLI (RECOMMENDED)
 ### Linux/MacOS
-- Configure your .zshrc, .bashrc or any other config file your terminal uses 
+1. Configure your .zshrc, .bashrc or any other config file your terminal uses 
 ```
 echo 'alias osrs="~/path/to/osrs_wiki.py"' >> ~/.zshrc
 source ~/.zshrc
 ```
 ^^ Replace `~/path/to/osrs_wiki.py` with the actual path to your script.
+
+2. Set osrs.py to be executabe with
+```
+chmod + x <~/path/to/osrs_wiki.py>
+```
+
+Now you can just run `osrs <thing>`, i.e: `osrs highwayman`
 
 ## Dependencies
 
