@@ -16,7 +16,7 @@ This Python script allows you to quickly fetch and display information from the 
 
 - Python 3.6+
 - pip (Python package installer)
-- Linux/MacOS (haven't tested on Windows yet)
+- Linux/MacOS/WSL if Windows
 
 ## Installation
 
