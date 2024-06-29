@@ -21,8 +21,8 @@ This Python script allows you to quickly fetch and display information from the 
 
 1. Clone this repository:
 ```
-git clone https://github.com/yourusername/osrs-wiki-scraper.git
-cd osrs-wiki-scraper
+git clone https://github.com/aptrinh/osrs-wiki-tui.git
+cd osrs-wiki-tui
 ```
 2. Install the required packages:
 ```
@@ -32,11 +32,11 @@ pip install -r requirements.txt
 
 Run the script from the command line, providing your search term as an argument:
 ```
-python osrs.py <search term>
+python osrs_wiki.py <search term>
 ```
 > Example
 ```
-python osrs.py rat
+python osrs_wiki.py rat
 ```
 ## Calling from terminal/CLI (RECOMMENDED)
 ### Linux/MacOS
