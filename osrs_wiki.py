@@ -14,7 +14,13 @@ def get_wiki_info(url):
     
     page_url = response.url
     
-    first_p = soup.find('p')
+    # Find the first non-empty paragraph
+    first_p = None
+    for p in soup.find_all('p'):
+        if p.text.strip():
+            first_p = p
+            break
+    
     first_paragraph = first_p.text.strip() if first_p else "No content found."
 
     # Check for disambiguation page
@@ -86,9 +92,11 @@ def format_infobox(infobox_info):
 
     return table
 def process_search(search_term):
-    url = f"https://oldschool.runescape.wiki/w/{quote(search_term)}"
+    encoded_term = quote(search_term).replace('+', '%2B')  # Encode '+' as '%2B'
+    url = f"https://oldschool.runescape.wiki/w/{encoded_term}"
     while True:
         page_url, first_paragraph, info, is_disambiguation = get_wiki_info(url)
+
         
         if not is_disambiguation:
             return page_url, first_paragraph, info
