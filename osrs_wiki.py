@@ -95,9 +95,12 @@ def process_search(search_term):
     encoded_term = quote(search_term).replace('+', '%2B')  # Encode '+' as '%2B'
     url = f"https://oldschool.runescape.wiki/w/{encoded_term}"
     while True:
-        page_url, first_paragraph, info, is_disambiguation = get_wiki_info(url)
+        try:
+            page_url, first_paragraph, info, is_disambiguation = get_wiki_info(url)
+        except requests.exceptions.RequestException as e:
+            console.print(f"[bold red]Error accessing the wiki: {e}[/bold red]")
+            return None, None, None
 
-        
         if not is_disambiguation:
             return page_url, first_paragraph, info
         
@@ -138,10 +141,14 @@ if __name__ == "__main__":
     
     page_url, first_paragraph, infobox_info = process_search(search_term)
     
+    if page_url is None:
+        sys.exit(1)  # Exit if there was an error accessing the wiki
+    
     console.print(Panel(f"[link={page_url}]{page_url}[/link]", title="Page URL", expand=False))
     console.print(Panel(first_paragraph, title="Summary", expand=False))
     
     if infobox_info:
-        console.print(format_infobox(infobox_info))
-    # else:
-    #     console.print("[yellow]No infobox information found for this page.[/yellow]")
+        # console.print(format_infobox(infobox_info))
+        console.print(infobox_info)
+    else:
+        console.print("[yellow]No infobox information found for this page.[/yellow]")
