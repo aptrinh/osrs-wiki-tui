@@ -148,7 +148,7 @@ if __name__ == "__main__":
     console.print(Panel(first_paragraph, title="Summary", expand=False))
     
     if infobox_info:
-        # console.print(format_infobox(infobox_info))
-        console.print(infobox_info)
+        console.print(format_infobox(infobox_info))
+        # console.print(infobox_info)
     else:
         console.print("[yellow]No infobox information found for this page.[/yellow]")
