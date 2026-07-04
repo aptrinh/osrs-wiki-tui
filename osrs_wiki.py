@@ -7,119 +7,114 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
+HEADERS = {"User-Agent": "osrs-wiki-tui (https://github.com/aptrinh/osrs-wiki-tui)"}
 
-def get_wiki_info(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    page_url = response.url
-    
-    # Find the first non-empty paragraph
+
+def get_info(url):
+    r = requests.get(url, headers=HEADERS)
+    if r.status_code == 404:
+        return r.url, None, None, False
+    r.raise_for_status()
+    soup = BeautifulSoup(r.text, 'html.parser')
+    page_url = r.url
+
     first_p = None
     for p in soup.find_all('p'):
         if p.text.strip():
             first_p = p
             break
-    
-    first_paragraph = first_p.text.strip() if first_p else "No content found."
+    summary = first_p.text.strip() if first_p else "No content found."
 
-    # Check for disambiguation page
-    if "may refer to:" in first_paragraph:
+    if "may refer to:" in summary:
         options = []
-        content_div = soup.find('div', class_='mw-parser-output')
-        if content_div:
-            for i, li in enumerate(content_div.find('ul').find_all('li', recursive=False), 1):
+        content = soup.find('div', class_='mw-parser-output')
+        if content:
+            for i, li in enumerate(content.find('ul').find_all('li', recursive=False), 1):
                 link = li.find('a')
                 if link:
                     options.append((i, link.text, link['href'], li.text))
-        return page_url, first_paragraph, options, True  # True indicates it's a disambiguation page
+        return page_url, summary, options, True
 
-    # If not a disambiguation page, process as before
     infobox = soup.find('table', class_=lambda x: x and 'infobox' in x)
     if not infobox:
-        return page_url, first_paragraph, None, False  # Return None instead of a string message
-    
-    info = []
-    current_subheader = "General"  # Start with a "General" section
+        return page_url, summary, None, False
 
+    info = []
     for row in infobox.find_all('tr'):
         th = row.find('th')
         tds = row.find_all('td')
-
         if th and 'infobox-subheader' in th.get('class', []):
-            current_subheader = th.text.strip()
-            info.append(f"\n--- {current_subheader} ---")
+            info.append(f"\n--- {th.text.strip()} ---")
         elif th:
             key = th.text.strip()
             value = " ".join(td.text.strip() for td in tds if td.text.strip())
-            
-            # Special handling for "Assigned by" or similar image-based fields
             if not value:
                 links = row.find_all('a')
-                value = ", ".join(link.get('title', link.text) for link in links if link.get('title') or link.text)
-            
-            # Handle cases where value might be in a nested structure
+                value = ", ".join(l.get('title', l.text) for l in links if l.get('title') or l.text)
             if not value:
                 value = " ".join(row.stripped_strings)
-            
             if value:
                 info.append(f"{key}: {value}")
-        elif all('infobox-nested' in td.get('class', []) for td in tds):
+        elif tds and all('infobox-nested' in td.get('class', []) for td in tds):
             for td in tds:
                 key = td.get('data-attr-param', '').capitalize()
                 value = td.text.strip()
                 if key and value:
                     info.append(f"{key}: {value}")
-    
-    return page_url, first_paragraph, "\n".join(info) if info else None, False
 
-def format_infobox(infobox_info):
+    return page_url, summary, "\n".join(info) if info else None, False
+
+
+def fmt_box(info):
     table = Table(title="# Infobox Information #", show_header=True, header_style="bold magenta")
     table.add_column("Section", style="cyan", no_wrap=True)
     table.add_column("Key", style="green")
     table.add_column("Value", style="yellow")
 
-    current_section = "General"
-    last_displayed_section = None
-    for line in infobox_info.split('\n'):
+    section = "General"
+    last = None
+    for line in info.split('\n'):
         if line.startswith('---'):
-            current_section = line.strip('- ')
+            section = line.strip('- ')
         elif ': ' in line:
             key, value = line.split(': ', 1)
-            section_to_display = current_section if current_section != last_displayed_section else ""
-            table.add_row(section_to_display, key, value)
-            last_displayed_section = current_section
-
+            shown = section if section != last else ""
+            table.add_row(shown, key, value)
+            last = section
     return table
-def process_search(search_term):
-    encoded_term = quote(search_term).replace('+', '%2B')  # Encode '+' as '%2B'
-    url = f"https://oldschool.runescape.wiki/w/{encoded_term}"
+
+
+def search(term):
+    encoded = quote(term).replace('+', '%2B')
+    url = f"https://oldschool.runescape.wiki/w/{encoded}"
+
     while True:
         try:
-            page_url, first_paragraph, info, is_disambiguation = get_wiki_info(url)
+            page_url, summary, info, disambig = get_info(url)
         except requests.exceptions.RequestException as e:
             console.print(f"[bold red]Error accessing the wiki: {e}[/bold red]")
             return None, None, None
 
-        if not is_disambiguation:
-            return page_url, first_paragraph, info
-        
-        console.print(Panel(first_paragraph, title="Disambiguation", expand=False))
+        if summary is None:
+            console.print(f"[bold red]Page not found:[/bold red] {page_url}")
+            return None, None, None
+
+        if not disambig:
+            return page_url, summary, info
+
+        console.print(Panel(summary, title="Disambiguation", expand=False))
         table = Table(title="Options", show_header=True, header_style="bold magenta")
         table.add_column("Number", style="cyan", no_wrap=True)
         table.add_column("Option", style="green")
         table.add_column("Description", style="yellow")
-        
-        for num, title, href, description in info:
-            table.add_row(str(num), title, description)
-        
+        for num, title, href, desc in info:
+            table.add_row(str(num), title, desc)
         console.print(table)
-        
+
         choice = console.input("[bold green]Enter the number of your choice (or 'q' to quit): [/bold green]")
         if choice.lower() == 'q':
             console.print("[bold red]Exiting.[/bold red]")
             sys.exit(0)
-        
         try:
             choice = int(choice)
             if 1 <= choice <= len(info):
@@ -134,21 +129,18 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: ./osrs_wiki.py <search_term>")
         sys.exit(1)
-    
-    search_term = " ".join(sys.argv[1:])
+
+    term = " ".join(sys.argv[1:])
     console = Console()
-    console.print(f"[bold blue]Searching for:[/bold blue] {search_term}")
-    
-    page_url, first_paragraph, infobox_info = process_search(search_term)
-    
+    console.print(f"[bold blue]Searching for:[/bold blue] {term}")
+
+    page_url, summary, box = search(term)
     if page_url is None:
-        sys.exit(1)  # Exit if there was an error accessing the wiki
-    
+        sys.exit(1)
+
     console.print(Panel(f"[link={page_url}]{page_url}[/link]", title="Page URL", expand=False))
-    console.print(Panel(first_paragraph, title="Summary", expand=False))
-    
-    if infobox_info:
-        console.print(format_infobox(infobox_info))
-        # console.print(infobox_info)
+    console.print(Panel(summary, title="Summary", expand=False))
+    if box:
+        console.print(fmt_box(box))
     else:
         console.print("[yellow]No infobox information found for this page.[/yellow]")
